@@ -1,3 +1,4 @@
+import { Button } from '~/components/ui/button';
 import mongoClient from '~/lib/mongodb';
 
 export default async function Index() {
@@ -7,6 +8,7 @@ export default async function Index() {
     <div>
       <p>Home</p>
       <p>{isConnected ? '' : 'not'} connected</p>
+      <Button>test button</Button>
     </div>
   );
 }
