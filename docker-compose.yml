@@ -12,6 +12,21 @@ services:
     volumes:
       - mongodb_data:/data/db
 
+  minio-s3-compatible-storage:
+    image: minio/minio:latest
+    container_name: minio-s3-compatible-storage
+    command: server /data --console-address ":9001"
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    environment:
+      MINIO_ROOT_USER: root
+      MINIO_ROOT_PASSWORD: password
+    volumes:
+      - minio_data:/data
+
 volumes:
   mongodb_data:
+    driver: local
+  minio_data:
     driver: local

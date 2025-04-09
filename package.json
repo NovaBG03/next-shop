@@ -14,6 +14,8 @@
     "check": "$npm_execpath typecheck && $npm_execpath lint && $npm_execpath format"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.782.0",
+    "@aws-sdk/s3-request-presigner": "^3.782.0",
     "@radix-ui/react-slot": "^1.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

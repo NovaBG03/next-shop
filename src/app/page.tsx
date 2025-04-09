@@ -1,19 +1,24 @@
 import { Button } from '~/components/ui/button';
-import mongoClient from '~/lib/mongodb';
+import { addNewProduct, removeProduct } from '~/lib/actions';
+import mongoClient from '~/lib/mongodb/client';
 
 export default async function Index() {
   const isConnected = await testDatabaseConnection();
-
+  const count = await mongoClient.db('next-shop').collection('products').countDocuments();
+  const products = await mongoClient.db('next-shop').collection('products').find().toArray();
   return (
-    <div>
+    <div className="p-4">
       <p>Home</p>
-      <p>{isConnected ? '' : 'not'} connected</p>
-      <Button>test button</Button>
+      <p>{isConnected ? '' : 'not'} connected to DB</p>
+      <p>Count: {count}</p>
+      <Button onClick={addNewProduct.bind(null, count)}>add</Button>
+      <Button onClick={removeProduct}>remove</Button>
+      <pre>{JSON.stringify(products, null, 2)}</pre>
     </div>
   );
 }
 
-export async function testDatabaseConnection() {
+async function testDatabaseConnection() {
   try {
     await mongoClient.db('admin').command({ ping: 1 });
     console.log('Pinged your deployment. You successfully connected to MongoDB!'); // because this is a server action, the console.log will be outputted to your terminal not in the browser
