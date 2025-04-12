@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 import { BoxIcon, GaugeIcon, InboxIcon, LibraryIcon } from 'lucide-react';
 
 import { NavMain } from '~/components/nav-main';
@@ -24,20 +26,21 @@ const NAV_MENU = [
   },
   {
     title: 'Categories',
-    url: '/admin/category',
+    url: '/admin/categories',
     icon: LibraryIcon,
   },
   {
     title: 'Products',
-    url: '/admin/product',
+    url: '/admin/products',
     icon: BoxIcon,
   },
   {
     title: 'Orders',
-    url: '/admin/order',
+    url: '/admin/orders',
     icon: InboxIcon,
   },
 ];
+
 export const AppSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) => {
   const session = authClient.useSession();
   const user = session.data?.user;
@@ -48,10 +51,10 @@ export const AppSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) =
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:!p-1.5">
-              <a href="#">
+              <Link href="/">
                 <AppIcon className="!size-5" />
                 <span className="text-base font-semibold">Next Shop</span>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
