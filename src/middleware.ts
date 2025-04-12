@@ -2,23 +2,25 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getSessionCookie } from 'better-auth/cookies';
 
-const ADMIN_URL = '/admin';
-const AUTH_URL = '/auth';
+import { ADMIN_BASE_PATH, AUTH_BASE_PATH, AUTH_SUCCESS_REDIRECT } from './config/routes';
 
 export const middleware = (request: NextRequest) => {
-  if (request.nextUrl.pathname.startsWith(ADMIN_URL)) {
+  if (request.nextUrl.pathname.startsWith(ADMIN_BASE_PATH)) {
     // protect admin page
     const sessionCookie = getSessionCookie(request);
     if (!sessionCookie) {
-      const url = new URL(AUTH_URL, request.url);
-      url.searchParams.set('callbackURL', request.nextUrl.pathname);
+      const url = new URL(AUTH_BASE_PATH, request.url);
+      if (request.nextUrl.pathname !== AUTH_SUCCESS_REDIRECT) {
+        console.log(request.nextUrl.pathname, AUTH_SUCCESS_REDIRECT);
+        url.searchParams.set('callbackURL', request.nextUrl.pathname);
+      }
       return NextResponse.redirect(url);
     }
-  } else if (request.nextUrl.pathname.startsWith(AUTH_URL)) {
+  } else if (request.nextUrl.pathname.startsWith(AUTH_BASE_PATH)) {
     // protect auth page
     const sessionCookie = getSessionCookie(request);
     if (sessionCookie) {
-      return NextResponse.redirect(new URL(ADMIN_URL, request.url));
+      return NextResponse.redirect(new URL(ADMIN_BASE_PATH, request.url));
     }
   }
 };
