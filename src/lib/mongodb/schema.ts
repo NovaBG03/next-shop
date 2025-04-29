@@ -32,7 +32,7 @@ export const Product = type({
   'description?': 'string <= 2000',
   categoryIds: ObjectId.array().atLeastLength(1),
   price: '0 < number < 1000000000',
-  stock: '0 < number < 1000000000',
+  stock: '0 <= number < 1000000000',
   'images?': ImageMetadata.array(),
   'options?': ProductOption.array(),
   'variants?': ProductVariant.array(),

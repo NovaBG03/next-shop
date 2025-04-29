@@ -105,6 +105,7 @@ export const createCategoryAction = async (
       createdAt: new Date(),
       updatedAt: new Date(),
     });
+    revalidatePath('/admin');
     revalidatePath('/admin/categories');
   } catch (error) {
     console.error('Error creating new category:', error);
@@ -156,6 +157,7 @@ export const updateCategoryAction = async (
       return { data, error: 'Category not found for update.' };
     }
 
+    revalidatePath('/admin');
     revalidatePath('/admin/categories');
     revalidatePath(`/admin/categories/${categoryId}/edit`);
   } catch (error) {
@@ -247,6 +249,7 @@ export const createProductAction = async (
       createdAt: new Date(),
       updatedAt: new Date(),
     });
+    revalidatePath('/admin');
     revalidatePath('/admin/products');
   } catch (error) {
     console.error('Error creating new product:', error);
@@ -255,28 +258,59 @@ export const createProductAction = async (
   redirect('/admin/products');
 };
 
-export const clearDatabaseAction = async () => {
+export const clearDatabaseAction = async (): Promise<void> => {
   const db = getDefaultDb();
-  await collections.categories(db).deleteMany();
-  await collections.categories(db).deleteMany();
+  await collections.categories(db).deleteMany({});
+  await collections.products(db).deleteMany({});
+  revalidatePath('/admin');
+  revalidatePath('/admin/categories');
+  revalidatePath('/admin/products');
 };
 
-export const seedDatabaseAction = async (): Promise<{ message: string } | { error: string }> => {
+export const initializeIndexesAction = async (): Promise<void> => {
+  try {
+    const db = getDefaultDb();
+
+    await collections
+      .categories(db)
+      .createIndexes([
+        { key: { slug: 1 }, unique: true },
+        { key: { name: 1 }, unique: true },
+        { key: { createdAt: 1 } },
+      ]);
+
+    await collections
+      .products(db)
+      .createIndexes([
+        { key: { slug: 1 }, unique: true },
+        { key: { name: 1 }, unique: true },
+        { key: { categoryIds: 1 } },
+        { key: { price: 1 } },
+        { key: { stock: 1 } },
+        { key: { createdAt: -1 } },
+      ]);
+  } catch (error) {
+    console.error('Error initializing database indexes:', error);
+  }
+  revalidatePath('/admin');
+};
+
+export const seedDatabaseAction = async (): Promise<void> => {
   try {
     const db = getDefaultDb();
     const categoriesCollection = collections.categories(db);
     const productsCollection = collections.products(db);
 
-    const categoriesToInsert = seedCategories.map((cat) => ({
-      ...cat,
+    const categoriesToInsert = seedCategories.map((category) => ({
+      ...category,
       _id: new ObjectId(),
       createdAt: new Date(),
       updatedAt: new Date(),
     }));
-    const categoryInsertResult = await categoriesCollection.insertMany(categoriesToInsert);
+    await categoriesCollection.insertMany(categoriesToInsert);
 
     const categorySlugToIdMap = new Map<string, ObjectId>();
-    categoriesToInsert.forEach((cat) => categorySlugToIdMap.set(cat.slug, cat._id));
+    categoriesToInsert.forEach((category) => categorySlugToIdMap.set(category.slug, category._id));
 
     const productsToInsert = seedProducts.map((prodData) => {
       const { categorySlugs, ...restProdData } = prodData;
@@ -303,9 +337,11 @@ export const seedDatabaseAction = async (): Promise<{ message: string } | { erro
     });
 
     if (productsToInsert.length > 0) {
-      const validatedProducts = productsToInsert.map((p) => Product(p));
-      const errors = validatedProducts.filter((p) => p instanceof type.errors);
+      const validatedProducts = productsToInsert
+        .map((p) => Product(p))
+        .filter((x) => !(x instanceof type.errors));
 
+      const errors = validatedProducts.filter((p) => p instanceof type.errors);
       if (errors.length > 0) {
         console.error(
           'Validation errors in seed products:',
@@ -314,34 +350,14 @@ export const seedDatabaseAction = async (): Promise<{ message: string } | { erro
         throw new Error(`Validation failed for ${errors.length} seed products. Check console.`);
       }
 
-      const productInsertResult = await productsCollection.insertMany(
-        validatedProducts as Product[],
-      );
-
-      revalidatePath('/admin/categories');
-      revalidatePath('/admin/products');
-      revalidatePath('/');
-
-      return {
-        message: `Successfully seeded ${categoryInsertResult.insertedCount} categories and ${productInsertResult.insertedCount} products.`,
-      };
-    } else {
-      return {
-        message: `Successfully seeded ${categoryInsertResult.insertedCount} categories. No products were seeded.`,
-      };
+      await productsCollection.insertMany(validatedProducts as Product[]);
     }
   } catch (error) {
-    console.error('Error seeding database:', error); // Keep top-level error log
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error occurred during seeding.';
-    if (
-      error &&
-      typeof error === 'object' &&
-      'summary' in error &&
-      typeof error.summary === 'string'
-    ) {
-      return { error: `Failed to seed database due to validation error: ${error.summary}` };
-    }
-    return { error: `Failed to seed database: ${errorMessage}` };
+    console.error('Error seeding database:', error);
   }
+
+  revalidatePath('/');
+  revalidatePath('/admin');
+  revalidatePath('/admin/categories');
+  revalidatePath('/admin/products');
 };
