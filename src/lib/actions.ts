@@ -47,6 +47,27 @@ export const getAllCategories = async () => {
   }
 };
 
+export const getCategoriesPage = async (page = 1, limit = 10) => {
+  try {
+    const db = getDefaultDb();
+    const collectionCategories = collections.categories(db);
+
+    const [results, total] = await Promise.all([
+      collectionCategories
+        .find()
+        .sort({ createdAt: 1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .toArray(),
+      collectionCategories.countDocuments(),
+    ]);
+
+    return { results, total, totalPages: Math.ceil(total / limit) };
+  } catch (error) {
+    throw new Error('Error fetching categories:', { cause: error });
+  }
+};
+
 export const getCategory = async (id: string | ObjectId) => {
   try {
     const db = getDefaultDb();
@@ -179,11 +200,22 @@ export const getProduct = async (id: string | ObjectId) => {
   }
 };
 
-export const getAllProducts = async () => {
+export const getProductsPage = async (page = 1, limit = 10) => {
   try {
     const db = getDefaultDb();
     const collectionProducts = collections.products(db);
-    return await collectionProducts.find().sort({ createdAt: -1 }).toArray();
+
+    const [results, total] = await Promise.all([
+      collectionProducts
+        .find()
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .toArray(),
+      collectionProducts.countDocuments(),
+    ]);
+
+    return { results, total, totalPages: Math.ceil(total / limit) };
   } catch (error) {
     throw new Error('Error fetching products:', { cause: error });
   }
