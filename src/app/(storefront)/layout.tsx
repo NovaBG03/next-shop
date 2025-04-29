@@ -31,8 +31,7 @@ export default function StorefrontLayout({ children }: React.PropsWithChildren) 
           </div>
 
           <div className="flex items-center gap-4">
-            <SearchForm />
-
+            <SearchForm variant="default" />
             <Button variant="outline" size="icon">
               <ShoppingCart className="h-5 w-5" />
               <span className="sr-only">View cart</span>

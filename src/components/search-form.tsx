@@ -8,8 +8,14 @@ import { Search, X } from 'lucide-react';
 
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
+import { cn } from '~/lib/utils';
 
-export const SearchForm = () => {
+type SearchFormProps = {
+  variant?: 'default' | 'hero';
+  className?: string;
+};
+
+export const SearchForm = ({ variant = 'default', className }: SearchFormProps) => {
   const router = useRouter();
   const params = useSearchParams();
   const [query, setQuery] = useState(() => params.get('q') ?? '');
@@ -22,31 +28,48 @@ export const SearchForm = () => {
     }
   };
 
+  const isHero = variant === 'hero';
+
   return (
     <>
-      {/* Desktop search form */}
-      <form onSubmit={handleSubmit} className="relative hidden w-72 md:block">
-        <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
+      <form
+        onSubmit={handleSubmit}
+        className={cn('relative', isHero ? 'w-full' : 'hidden w-72 md:block', className)}
+      >
+        <Search
+          className={cn(
+            'text-muted-foreground absolute left-3',
+            isHero ? 'top-1/2 h-5 w-5 -translate-y-1/2' : 'top-2.5 h-4 w-4',
+          )}
+        />
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search products..."
-          className="w-full pl-8"
+          className={cn('w-full', isHero ? 'rounded-md py-6 pr-20 pl-10 text-base' : 'pl-8')}
         />
+        {isHero && (
+          <Button
+            type="submit"
+            className="absolute top-1/2 right-1 -translate-y-1/2 rounded-md px-4 py-1.5"
+          >
+            Search
+          </Button>
+        )}
       </form>
 
-      {/* Mobile search button */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="md:hidden"
-        onClick={() => setIsMobileSearchOpen(true)}
-      >
-        <Search className="h-5 w-5" />
-        <span className="sr-only">Search</span>
-      </Button>
+      {!isHero && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden"
+          onClick={() => setIsMobileSearchOpen(true)}
+        >
+          <Search className="h-5 w-5" />
+          <span className="sr-only">Search</span>
+        </Button>
+      )}
 
-      {/* Mobile search overlay */}
       {isMobileSearchOpen && (
         <div className="bg-background fixed inset-0 z-50 flex flex-col p-4 md:hidden">
           <div className="flex items-center justify-between">
