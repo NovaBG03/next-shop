@@ -5,13 +5,20 @@ import {
   ChevronRight,
   DatabaseIcon,
   PackageIcon,
+  SearchIcon,
   ShoppingCart,
   TagIcon,
 } from 'lucide-react';
 
 import { Button } from '~/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '~/components/ui/card';
-import { clearDatabaseAction, initializeIndexesAction, seedDatabaseAction } from '~/lib/actions';
+import {
+  clearDatabaseAction,
+  dropIndexesAction,
+  initializeIndexesAction,
+  isProductTextSearchIndexInitialized,
+  seedDatabaseAction,
+} from '~/lib/actions';
 import { collections, getDefaultDb } from '~/lib/mongodb/db';
 
 export default async function Admin() {
@@ -36,7 +43,9 @@ export default async function Admin() {
   const productCount = productStats.totalCount[0]?.count ?? 0;
   const lowStockCount = productStats.lowStockCount[0]?.count ?? 0;
   const outOfStockCount = productStats.outOfStockCount[0]?.count ?? 0;
-  const avgPrice = Math.round((productStats.avgPrice[0].avg ?? 0) * 100) / 100;
+  const avgPrice = Math.round((productStats.avgPrice[0]?.avg ?? 0) * 100) / 100;
+
+  const hasTextIndex = await isProductTextSearchIndexInitialized();
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -116,6 +125,36 @@ export default async function Admin() {
         </Card>
       </div>
 
+      <Card
+        className={hasTextIndex ? 'border-green-200 bg-green-50' : 'border-yellow-200 bg-yellow-50'}
+      >
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-sm font-medium">Search Index Status</CardTitle>
+          <SearchIcon
+            className={`h-4 w-4 ${hasTextIndex ? 'text-green-500' : 'text-yellow-500'}`}
+          />
+        </CardHeader>
+        <CardContent>
+          <div className="text-base font-medium">
+            {hasTextIndex ? 'Text search index is active' : 'Text search index is not initialized'}
+          </div>
+          <p className="text-muted-foreground text-xs">
+            {hasTextIndex
+              ? 'Search is using advanced text search capabilities'
+              : 'Initialize indexes to enable advanced search features'}
+          </p>
+        </CardContent>
+        {!hasTextIndex && (
+          <CardFooter>
+            <form action={initializeIndexesAction}>
+              <Button type="submit" variant="outline" className="w-full">
+                Initialize Indexes
+              </Button>
+            </form>
+          </CardFooter>
+        )}
+      </Card>
+
       <div className="mt-6">
         <Card>
           <CardHeader>
@@ -124,7 +163,7 @@ export default async function Admin() {
               Database Actions
             </CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-4">
             <form action={seedDatabaseAction}>
               <Button type="submit" className="w-full" disabled={!!categoryCount || !!productCount}>
                 Seed Database
@@ -140,6 +179,12 @@ export default async function Admin() {
             <form action={initializeIndexesAction}>
               <Button type="submit" variant="outline" className="w-full">
                 Initialize Indexes
+              </Button>
+            </form>
+
+            <form action={dropIndexesAction}>
+              <Button type="submit" variant="destructive" className="w-full">
+                Drop Indexes
               </Button>
             </form>
           </CardContent>

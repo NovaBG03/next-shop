@@ -10,6 +10,8 @@ import { collections, getDefaultDb } from './mongodb/db';
 import { Category, Product } from './mongodb/schema';
 import { seedCategories, seedProducts } from './seed';
 
+const PRODUCTS_TEXT_SEARCH_INDEX = 'products_text_search';
+
 const formDataToObject = (formData: FormData) => {
   const formDataObject: Record<string, unknown> = {};
   [...new Set([...formData.keys()])].forEach((key) => {
@@ -219,9 +221,9 @@ const NewProductData = type({
   categoryIds: type('string | string[]')
     .pipe.try((v) => (typeof v === 'string' ? [getObjectId(v)] : v.map(getObjectId)))
     .to(Product.get('categoryIds')),
-  imageUrls: type('string.url | string.url[]')
-    .pipe((v) => (typeof v === 'string' ? [imageUrlToImage(v)] : v.map(imageUrlToImage)))
-    .to(Product.get('images')),
+  imageUrls: type('string.url | string.url[]').pipe((v) =>
+    typeof v === 'string' ? [imageUrlToImage(v)] : v.map(imageUrlToImage),
+  ),
   '+': 'delete',
 });
 
@@ -246,6 +248,7 @@ export const createProductAction = async (
 
     await collectionProducts.insertOne({
       ...data,
+      images: data.imageUrls,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -260,8 +263,21 @@ export const createProductAction = async (
 
 export const clearDatabaseAction = async (): Promise<void> => {
   const db = getDefaultDb();
+
   await collections.categories(db).deleteMany({});
   await collections.products(db).deleteMany({});
+
+  revalidatePath('/admin');
+  revalidatePath('/admin/categories');
+  revalidatePath('/admin/products');
+};
+
+export const dropIndexesAction = async (): Promise<void> => {
+  const db = getDefaultDb();
+
+  await collections.categories(db).dropIndexes();
+  await collections.products(db).dropIndexes();
+
   revalidatePath('/admin');
   revalidatePath('/admin/categories');
   revalidatePath('/admin/products');
@@ -271,6 +287,7 @@ export const initializeIndexesAction = async (): Promise<void> => {
   try {
     const db = getDefaultDb();
 
+    // Create indexes for categories collection
     await collections
       .categories(db)
       .createIndexes([
@@ -279,16 +296,21 @@ export const initializeIndexesAction = async (): Promise<void> => {
         { key: { createdAt: 1 } },
       ]);
 
-    await collections
-      .products(db)
-      .createIndexes([
-        { key: { slug: 1 }, unique: true },
-        { key: { name: 1 }, unique: true },
-        { key: { categoryIds: 1 } },
-        { key: { price: 1 } },
-        { key: { stock: 1 } },
-        { key: { createdAt: -1 } },
-      ]);
+    // Create indexes for products collection
+    await collections.products(db).createIndexes([
+      { key: { slug: 1 }, unique: true },
+      { key: { name: 1 }, unique: true },
+      { key: { categoryIds: 1 } },
+      { key: { price: 1 } },
+      { key: { stock: 1 } },
+      { key: { createdAt: -1 } },
+      // Text index for search functionality
+      {
+        key: { name: 'text', description: 'text' },
+        weights: { name: 10, description: 5 },
+        name: PRODUCTS_TEXT_SEARCH_INDEX,
+      },
+    ]);
   } catch (error) {
     console.error('Error initializing database indexes:', error);
   }
@@ -360,4 +382,10 @@ export const seedDatabaseAction = async (): Promise<void> => {
   revalidatePath('/admin');
   revalidatePath('/admin/categories');
   revalidatePath('/admin/products');
+};
+
+export const isProductTextSearchIndexInitialized = async () => {
+  const db = getDefaultDb();
+  const indexes = await collections.products(db).indexes();
+  return indexes.some((index) => index.name === PRODUCTS_TEXT_SEARCH_INDEX);
 };
