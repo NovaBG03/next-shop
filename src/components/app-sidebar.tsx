@@ -34,11 +34,11 @@ const NAV_MENU = [
     url: '/admin/products',
     icon: BoxIcon,
   },
-  {
-    title: 'Orders',
-    url: '/admin/orders',
-    icon: InboxIcon,
-  },
+  // {
+  //   title: 'Orders',
+  //   url: '/admin/orders',
+  //   icon: InboxIcon,
+  // },
 ];
 
 export const AppSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) => {

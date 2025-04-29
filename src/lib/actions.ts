@@ -8,6 +8,7 @@ import { ObjectId } from 'mongodb';
 
 import { collections, getDefaultDb } from './mongodb/db';
 import { Category, Product } from './mongodb/schema';
+import { seedCategories, seedProducts } from './seed';
 
 const formDataToObject = (formData: FormData) => {
   const formDataObject: Record<string, unknown> = {};
@@ -252,4 +253,95 @@ export const createProductAction = async (
     return { data, error: 'Failed to create product due to a server error.' };
   }
   redirect('/admin/products');
+};
+
+export const clearDatabaseAction = async () => {
+  const db = getDefaultDb();
+  await collections.categories(db).deleteMany();
+  await collections.categories(db).deleteMany();
+};
+
+export const seedDatabaseAction = async (): Promise<{ message: string } | { error: string }> => {
+  try {
+    const db = getDefaultDb();
+    const categoriesCollection = collections.categories(db);
+    const productsCollection = collections.products(db);
+
+    const categoriesToInsert = seedCategories.map((cat) => ({
+      ...cat,
+      _id: new ObjectId(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }));
+    const categoryInsertResult = await categoriesCollection.insertMany(categoriesToInsert);
+
+    const categorySlugToIdMap = new Map<string, ObjectId>();
+    categoriesToInsert.forEach((cat) => categorySlugToIdMap.set(cat.slug, cat._id));
+
+    const productsToInsert = seedProducts.map((prodData) => {
+      const { categorySlugs, ...restProdData } = prodData;
+      const categoryIds =
+        categorySlugs
+          ?.map((slug) => categorySlugToIdMap.get(slug))
+          .filter((id): id is ObjectId => id !== undefined) ?? [];
+
+      const variants = (restProdData.variants ?? []).map((variant) => ({
+        ...variant,
+        images: variant.images ?? [],
+      }));
+
+      return {
+        ...restProdData,
+        _id: new ObjectId(),
+        categoryIds,
+        variants: variants,
+        options: restProdData.options ?? [],
+        images: restProdData.images ?? [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+    });
+
+    if (productsToInsert.length > 0) {
+      const validatedProducts = productsToInsert.map((p) => Product(p));
+      const errors = validatedProducts.filter((p) => p instanceof type.errors);
+
+      if (errors.length > 0) {
+        console.error(
+          'Validation errors in seed products:',
+          errors.map((e) => e.summary),
+        );
+        throw new Error(`Validation failed for ${errors.length} seed products. Check console.`);
+      }
+
+      const productInsertResult = await productsCollection.insertMany(
+        validatedProducts as Product[],
+      );
+
+      revalidatePath('/admin/categories');
+      revalidatePath('/admin/products');
+      revalidatePath('/');
+
+      return {
+        message: `Successfully seeded ${categoryInsertResult.insertedCount} categories and ${productInsertResult.insertedCount} products.`,
+      };
+    } else {
+      return {
+        message: `Successfully seeded ${categoryInsertResult.insertedCount} categories. No products were seeded.`,
+      };
+    }
+  } catch (error) {
+    console.error('Error seeding database:', error); // Keep top-level error log
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error occurred during seeding.';
+    if (
+      error &&
+      typeof error === 'object' &&
+      'summary' in error &&
+      typeof error.summary === 'string'
+    ) {
+      return { error: `Failed to seed database due to validation error: ${error.summary}` };
+    }
+    return { error: `Failed to seed database: ${errorMessage}` };
+  }
 };

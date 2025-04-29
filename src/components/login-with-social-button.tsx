@@ -20,7 +20,7 @@ const SOCIAL_PROVIDERS = {
 
 type LoginWithSocialButtonProps = {
   provider: keyof typeof SOCIAL_PROVIDERS;
-  callbackURL?: string;
+  callbackURL?: string | undefined;
 };
 
 export const LoginWithSocialButton = ({
