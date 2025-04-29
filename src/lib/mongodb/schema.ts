@@ -25,12 +25,14 @@ export const ProductVariant = type({
 });
 export type ProductVariant = typeof ProductVariant.infer;
 
+const Slug = type('3 <= /^[a-z0-9]+(?:-[a-z0-9]+)*$/ <= 50');
+
 export const Product = type({
-  name: 'string',
-  slug: 'string',
-  'description?': 'string',
-  categoryIds: ObjectId.array(),
-  price: 'number',
+  name: '3 <= string <= 127',
+  slug: Slug,
+  'description?': 'string <= 2000',
+  categoryIds: ObjectId.array().atLeastLength(1),
+  price: '0 < number < 1000000000',
   sku: 'string',
   stock: 'number',
   'images?': ImageMetadata.array(),
@@ -43,8 +45,8 @@ export type Product = typeof Product.infer;
 
 export const Category = type({
   name: '3 <= string <= 50',
-  slug: '3 <= /^[a-z0-9]+(?:-[a-z0-9]+)*$/ <= 50',
-  'description?': 'string',
+  slug: Slug,
+  'description?': 'string <= 2000',
   // parentCategory?: ObjectId; // Optional reference to a parent Category._id for hierarchies (e.g., "Men's" -> "Clothing")
   // Add other relevant fields if needed, like 'image', 'order', etc.
   // image?: string; // URL for a category image

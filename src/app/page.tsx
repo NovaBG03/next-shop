@@ -1,5 +1,3 @@
-import { Button } from '~/components/ui/button';
-import { addNewProduct, removeProduct } from '~/lib/actions';
 import mongoClient from '~/lib/mongodb/client';
 
 export default async function Index() {
@@ -11,8 +9,6 @@ export default async function Index() {
       <p>Home</p>
       <p>{isConnected ? '' : 'not'} connected to DB</p>
       <p>Count: {count}</p>
-      <Button onClick={addNewProduct.bind(null, count)}>add</Button>
-      <Button onClick={removeProduct}>remove</Button>
       <pre>{JSON.stringify(products, null, 2)}</pre>
     </div>
   );

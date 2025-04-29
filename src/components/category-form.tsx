@@ -7,7 +7,7 @@ import Link from 'next/link';
 
 import { AlertCircleIcon } from 'lucide-react';
 
-import { createCategoryAction } from '~/lib/actions';
+import { MutateAction } from '~/lib/actions';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -16,7 +16,7 @@ import { Textarea } from './ui/textarea';
 
 interface CategoryFormProps {
   initialData?: { name: string; slug: string; description?: string | undefined };
-  action: typeof createCategoryAction;
+  action: MutateAction;
 }
 
 export const CategoryForm = ({ initialData, action: formAction }: CategoryFormProps) => {
