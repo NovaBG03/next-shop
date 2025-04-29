@@ -72,7 +72,10 @@ const getExistingCategoryErrorMessage = async (
   if (data.slug === category.slug) return `Category with slug "${data.slug}" already exists.`;
 };
 
-const NewCategoryData = Category.pick('name', 'slug', 'description');
+const NewCategoryData = type({
+  '...': Category.pick('name', 'slug', 'description'),
+  '+': 'delete',
+});
 
 type MutateActionResult = undefined | { data: Record<string, unknown>; error?: string | undefined };
 export type MutateAction = (data: unknown, formData: FormData) => Promise<MutateActionResult>;
@@ -109,7 +112,10 @@ export const createCategoryAction = async (
   redirect('/admin/categories');
 };
 
-const UpdateCategoryData = Category.pick('name', 'slug', 'description');
+const UpdateCategoryData = type({
+  '...': Category.pick('name', 'slug', 'description'),
+  '+': 'delete',
+});
 
 export const updateCategoryAction = async (
   categoryId: string,
@@ -233,6 +239,8 @@ const StringToTwoDecimalFloat = type('string').pipe.try(
   (str) => +Number.parseFloat(str).toFixed(2),
 );
 
+const imageUrlToImage = (url: string) => ({ url, alt: 'Product Image' });
+
 const NewProductData = type({
   '...': Product.pick('name', 'slug', 'description'),
   price: StringToTwoDecimalFloat.to(Product.get('price')),
@@ -240,6 +248,10 @@ const NewProductData = type({
   categoryIds: type('string | string[]')
     .pipe.try((v) => (typeof v === 'string' ? [getObjectId(v)] : v.map(getObjectId)))
     .to(Product.get('categoryIds')),
+  imageUrls: type('string.url | string.url[]')
+    .pipe((v) => (typeof v === 'string' ? [imageUrlToImage(v)] : v.map(imageUrlToImage)))
+    .to(Product.get('images')),
+  '+': 'delete',
 });
 
 export const createProductAction = async (

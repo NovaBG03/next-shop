@@ -19,7 +19,6 @@ export type ProductOption = typeof ProductOption.infer;
 export const ProductVariant = type({
   optionValues: 'string[]',
   price: 'number',
-  sku: 'string',
   stock: 'number',
   'images?': ImageMetadata.array(),
 });
@@ -33,8 +32,7 @@ export const Product = type({
   'description?': 'string <= 2000',
   categoryIds: ObjectId.array().atLeastLength(1),
   price: '0 < number < 1000000000',
-  sku: 'string',
-  stock: 'number',
+  stock: '0 < number < 1000000000',
   'images?': ImageMetadata.array(),
   'options?': ProductOption.array(),
   'variants?': ProductVariant.array(),
@@ -58,7 +56,6 @@ export type Category = typeof Category.infer;
 
 export const CartItem = type({
   productId: ObjectId,
-  'variantSku?': 'string',
   quantity: 'number > 0',
 });
 export type CartItem = typeof CartItem.infer;

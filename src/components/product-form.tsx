@@ -1,11 +1,12 @@
 'use client';
 
-import { useActionState, useMemo, useState } from 'react';
+import { useActionState, useMemo, useRef, useState } from 'react';
 
 import Form from 'next/form';
+import Image from 'next/image';
 import Link from 'next/link';
 
-import { AlertCircleIcon, CheckIcon, ChevronsUpDown, XIcon } from 'lucide-react';
+import { AlertCircleIcon, CheckIcon, ChevronsUpDown, LinkIcon, XIcon } from 'lucide-react';
 
 import { MutateAction } from '~/lib/actions';
 import { cn } from '~/lib/utils';
@@ -24,6 +25,9 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Textarea } from './ui/textarea';
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+
+type DataImage = { url: string; alt?: string };
 
 type ProductFormProps = {
   categories: { id: string; name: string; slug: string }[];
@@ -34,6 +38,7 @@ type ProductFormProps = {
     price: number;
     stock: number;
     categoryIds?: string[];
+    images?: DataImage[];
   };
   action: MutateAction;
 };
@@ -68,11 +73,38 @@ export const ProductForm = ({ initialData, action: formAction, categories }: Pro
     });
   };
 
+  const imageUrlInputRef = useRef<React.ComponentRef<'input'>>(null);
+  const [selectedImages, setSelectedImages] = useState<DataImage[]>(
+    () => (state?.data?.images as DataImage[]) ?? [],
+  );
+  const handleAddImageUrl = () => {
+    const currentImageUrl = imageUrlInputRef.current?.value?.trim?.();
+    if (!currentImageUrl) return;
+    try {
+      new URL(currentImageUrl);
+      if (!selectedImages.some((x) => x.url === currentImageUrl)) {
+        setSelectedImages((prev) => [...prev, { url: currentImageUrl, alt: 'Product Image' }]);
+      }
+    } catch (error) {
+      console.log('Invalid URL provided', error);
+    }
+    if (imageUrlInputRef.current) {
+      imageUrlInputRef.current.value = '';
+    }
+  };
+  const handleRemoveImageUrl = (urlToRemove: string) => {
+    setSelectedImages((prev) => prev.filter((x) => x.url !== urlToRemove));
+  };
+
   return (
     <Form action={action}>
       {/* Hidden inputs to submit categoryIds */}
       {Array.from(selectedCategoryIds).map((id) => (
         <input key={id} type="hidden" name="categoryIds" value={id} />
+      ))}
+      {/* Hidden inputs to submit imageUrls */}
+      {selectedImages.map((image, index) => (
+        <input key={`img-${index}`} type="hidden" name="imageUrls" value={image.url} />
       ))}
 
       {state?.error && (
@@ -148,7 +180,6 @@ export const ProductForm = ({ initialData, action: formAction, categories }: Pro
               />
             </div>
 
-            {/* Category Selector */}
             <div className="space-y-2">
               <Label>Categories*</Label>
               <Popover>
@@ -189,7 +220,6 @@ export const ProductForm = ({ initialData, action: formAction, categories }: Pro
                   </Command>
                 </PopoverContent>
               </Popover>
-              {/* Display selected categories as badges */}
               <div className="mt-2 flex flex-wrap gap-1">
                 {selectedCategories.map((category) => (
                   <Badge key={category.id} variant="secondary">
@@ -205,6 +235,66 @@ export const ProductForm = ({ initialData, action: formAction, categories }: Pro
                   </Badge>
                 ))}
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="imageUrl">Image URLs</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  ref={imageUrlInputRef}
+                  id="imageUrl"
+                  placeholder="Paste image URL here"
+                  type="url"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddImageUrl();
+                    }
+                  }}
+                />
+                <Button type="button" onClick={handleAddImageUrl} variant="outline">
+                  Add
+                </Button>
+              </div>
+              {/* Display added image URLs */}
+              <div className="mt-2 flex flex-wrap gap-2">
+                {selectedImages.map((image, index) => (
+                  <div key={index} className="group relative p-1">
+                    <Image
+                      src={image.url}
+                      alt={image.alt ?? `Product image ${index + 1}`}
+                      className="h-32 w-32 rounded-sm object-cover"
+                      width={128}
+                      height={128}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImageUrl(image.url)}
+                      className="ring-offset-background focus:ring-ring absolute -top-1 -right-1 hidden cursor-pointer rounded-full bg-red-500 p-0.5 text-white opacity-80 group-hover:inline-flex hover:opacity-100 focus:ring-2 focus:ring-offset-2"
+                      aria-label={`Remove image ${index + 1}`}
+                    >
+                      <XIcon className="h-3 w-3" />
+                    </button>
+                    <Tooltip disableHoverableContent>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          onClick={() => navigator.clipboard.writeText(image.url)}
+                          className="bg-primary absolute top-1/2 left-1/2 hidden -translate-1/2 cursor-pointer rounded-full text-white opacity-80 group-hover:inline-flex hover:opacity-100"
+                        >
+                          <LinkIcon />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs text-xs break-all">{image.url}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                ))}
+              </div>
+              {selectedImages.length === 0 && (
+                <p className="text-muted-foreground text-sm">No images added yet.</p>
+              )}
             </div>
           </div>
         </div>
