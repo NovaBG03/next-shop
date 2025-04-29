@@ -1,3 +1,5 @@
+import 'server-only';
+
 import { MongoClient, MongoClientOptions } from 'mongodb';
 
 if (!process.env.MONGODB_URL) {

@@ -1,4 +1,5 @@
-import { ObjectId } from 'mongodb';
+import { type } from 'arktype';
+import { Db, ObjectId } from 'mongodb';
 
 // ==================================
 // Product Schema
@@ -62,7 +63,7 @@ export type Product = {
 // Category Schema
 // ==================================
 
-export type Category = {
+export type CategoryOld = {
   _id: ObjectId;
   name: string; // Name of the category (e.g., "T-Shirts", "Electronics")
   slug: string; // Unique, URL-safe identifier (e.g., "t-shirts", "electronics")
@@ -74,6 +75,20 @@ export type Category = {
   createdAt: Date;
   updatedAt: Date;
 };
+
+export const collectionCategory = (db: Db) => {
+  return db.collection<Category>('categories');
+};
+
+export const Category = type({
+  name: '3 <= string <= 50',
+  slug: '3 <= /^[a-z0-9]+(?:-[a-z0-9]+)*$/ <= 50',
+  'description?': 'string',
+  createdAt: 'Date',
+  updatedAt: 'Date',
+});
+
+export type Category = typeof Category.infer;
 
 // ==================================
 // Cart Schema
