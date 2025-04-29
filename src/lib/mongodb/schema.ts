@@ -10,17 +10,17 @@ export const ImageMetadata = type({
 });
 export type ImageMetadata = typeof ImageMetadata.infer;
 
-export const VariantAttribute = type({
-  name: 'string', // e.g., 'Color', 'Size'
-  value: 'string', // e.g., 'Red', 'Large'
+export const ProductOption = type({
+  name: 'string',
+  values: 'string[]',
 });
-export type VariantAttribute = typeof VariantAttribute.infer;
+export type ProductOption = typeof ProductOption.infer;
 
 export const ProductVariant = type({
-  attributes: type(VariantAttribute).array(),
-  'sku?': 'string', // Unique SKU for this *specific* combination
-  price: 'number', // The absolute price for this combination (overrides base product price)
-  stock: 'number', // Stock available for this *specific* combination
+  optionValues: 'string[]',
+  price: 'number',
+  sku: 'string',
+  stock: 'number',
   'images?': ImageMetadata.array(),
 });
 export type ProductVariant = typeof ProductVariant.infer;
@@ -28,13 +28,16 @@ export type ProductVariant = typeof ProductVariant.infer;
 export const Product = type({
   name: 'string',
   slug: 'string',
-  description: 'string',
-  price: 'number', // Base or display price (e.g., "Starting at..."). Authoritative price is in ProductVariant if variants exist.
-  categoryIds: ObjectId.array(), // References to Category._id documents
-  images: ImageMetadata.array(), // Master list of all images for the product. Variants can reference specific images from this list.
-  'variants?': ProductVariant.array(), // Array of specific, purchasable variant combinations. If empty/null, the product is sold as a single item using the top-level price/stock.
-  createdAt: 'Date', // Timestamp when the product was created
-  updatedAt: 'Date', // Timestamp when the product was last updated
+  'description?': 'string',
+  categoryIds: ObjectId.array(),
+  price: 'number',
+  sku: 'string',
+  stock: 'number',
+  'images?': ImageMetadata.array(),
+  'options?': ProductOption.array(),
+  'variants?': ProductVariant.array(),
+  createdAt: 'Date',
+  updatedAt: 'Date',
 });
 export type Product = typeof Product.infer;
 
@@ -51,20 +54,21 @@ export const Category = type({
 });
 export type Category = typeof Category.infer;
 
-export const CardItem = type({
+export const CartItem = type({
   productId: ObjectId,
-  'variantId?': ObjectId,
-  quantity: 'number',
+  'variantSku?': 'string',
+  quantity: 'number > 0',
 });
-export type CardItem = typeof CardItem.infer;
+export type CartItem = typeof CartItem.infer;
 
 export const Cart = type({
   userId: ObjectId,
-  items: CardItem.array(),
+  items: CartItem.array(),
   // Optional: Add fields like 'expiresAt' for abandoned carts, 'couponCode', 'discountAmount' later
   createdAt: 'Date',
   updatedAt: 'Date',
 });
+export type Cart = typeof Cart.infer;
 
 export const User = type({
   name: 'string',
