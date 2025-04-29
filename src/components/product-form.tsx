@@ -122,7 +122,7 @@ export const ProductForm = ({ initialData, action: formAction, categories }: Pro
               <Input
                 id="name"
                 name="name"
-                defaultValue={state?.data?.name?.toString?.() ?? 'Keyboard for MacOS'}
+                defaultValue={state?.data?.name?.toString?.()}
                 placeholder="Enter product name"
                 required
               />
@@ -133,7 +133,7 @@ export const ProductForm = ({ initialData, action: formAction, categories }: Pro
               <Input
                 id="slug"
                 name="slug"
-                defaultValue={state?.data?.slug?.toString?.() ?? 'keyboard-mac'}
+                defaultValue={state?.data?.slug?.toString?.()}
                 placeholder="product-slug"
                 required
               />
@@ -160,7 +160,7 @@ export const ProductForm = ({ initialData, action: formAction, categories }: Pro
                 type="number"
                 step="0.01"
                 min="0"
-                defaultValue={state?.data?.price?.toString?.() ?? 29.55}
+                defaultValue={state?.data?.price?.toString?.()}
                 placeholder="0.00"
                 required
               />
@@ -174,7 +174,7 @@ export const ProductForm = ({ initialData, action: formAction, categories }: Pro
                 type="number"
                 step="1"
                 min="0"
-                defaultValue={state?.data?.stock?.toString?.() ?? 12}
+                defaultValue={state?.data?.stock?.toString?.()}
                 placeholder="0"
                 required
               />
@@ -187,7 +187,7 @@ export const ProductForm = ({ initialData, action: formAction, categories }: Pro
                   <Button variant="outline" role="combobox" className="w-full justify-between">
                     <span className="truncate">
                       {selectedCategories.length > 0
-                        ? selectedCategories.map((cat) => cat.name).join(', ')
+                        ? selectedCategories.map((category) => category.name).join(', ')
                         : 'Select categories...'}
                     </span>
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />

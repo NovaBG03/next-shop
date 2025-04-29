@@ -1,7 +1,7 @@
 import { ProductForm } from '~/components/product-form';
 import { createProductAction, getAllCategories } from '~/lib/actions';
 
-export default async function NewProductPage() {
+export default async function ProductsNew() {
   const categories = await getAllCategories();
 
   return (
