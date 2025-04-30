@@ -319,7 +319,6 @@ export const initializeIndexesAction = async (): Promise<void> => {
   try {
     const db = getDefaultDb();
 
-    // Create indexes for categories collection
     await collections
       .categories(db)
       .createIndexes([
@@ -328,7 +327,6 @@ export const initializeIndexesAction = async (): Promise<void> => {
         { key: { createdAt: 1 } },
       ]);
 
-    // Create indexes for products collection
     await collections.products(db).createIndexes([
       { key: { slug: 1 }, unique: true },
       { key: { name: 1 }, unique: true },
@@ -336,7 +334,6 @@ export const initializeIndexesAction = async (): Promise<void> => {
       { key: { price: 1 } },
       { key: { stock: 1 } },
       { key: { createdAt: -1 } },
-      // Text index for search functionality
       {
         key: { name: 'text', description: 'text' },
         weights: { name: 10, description: 5 },
@@ -344,7 +341,7 @@ export const initializeIndexesAction = async (): Promise<void> => {
       },
     ]);
   } catch (error) {
-    console.error('Error initializing database indexes:', error);
+    console.log('Error initializing database indexes:', error);
   }
   revalidatePath('/admin');
 };

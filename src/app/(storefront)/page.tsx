@@ -82,7 +82,7 @@ export default async function HomePage() {
           <h2 className="mb-8 text-center text-2xl font-bold">Our Best Categories</h2>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
             {categories.map((category) => (
-              <Link href={`/category/${category.slug}`} key={category._id.toString()}>
+              <Link href={`/products/?category=${category.slug}`} key={category._id.toString()}>
                 <div className="bg-background hover:border-primary/20 flex flex-col items-center rounded-lg border p-4 transition-all hover:shadow-sm">
                   <div className="bg-muted/40 mb-3 rounded-full p-3">
                     <Tag className="text-foreground/80 h-6 w-6" />

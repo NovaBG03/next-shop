@@ -15,18 +15,13 @@ export default function StorefrontLayout({ children }: React.PropsWithChildren) 
               Next Shop
             </Link>
             <nav className="hidden md:block">
-              <ul className="flex gap-4">
+              <menu className="flex gap-4">
                 <li>
                   <Link href="/products" className="text-muted-foreground hover:text-foreground">
                     Products
                   </Link>
                 </li>
-                <li>
-                  <Link href="/categories" className="text-muted-foreground hover:text-foreground">
-                    Categories
-                  </Link>
-                </li>
-              </ul>
+              </menu>
             </nav>
           </div>
 

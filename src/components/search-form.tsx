@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -18,14 +18,32 @@ type SearchFormProps = {
 export const SearchForm = ({ variant = 'default', className }: SearchFormProps) => {
   const router = useRouter();
   const params = useSearchParams();
-  const [query, setQuery] = useState(() => params.get('q') ?? '');
+  const q = params.get('q') ?? '';
+  const [query, setQuery] = useState(q);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+
+  useEffect(() => setQuery(q), [q]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (query.trim()) {
-      router.push(`/search?q=${encodeURIComponent(query.trim())}`);
+    const url = new URL(location.href);
+    const q = query.trim();
+
+    if (url.pathname !== '/products') {
+      if (q) {
+        router.push(`/products?q=${encodeURIComponent(q)}`);
+      } else {
+        router.push('/products');
+      }
+    } else {
+      if (q) {
+        url.searchParams.set('q', q);
+      } else {
+        url.searchParams.delete('q');
+      }
+      router.push(url.href);
     }
+    setIsMobileSearchOpen(false);
   };
 
   const isHero = variant === 'hero';
