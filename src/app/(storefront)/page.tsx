@@ -68,7 +68,7 @@ export default async function HomePage() {
                 </CardContent>
                 <CardFooter>
                   <Button asChild className="w-full">
-                    <Link href={`/product/${product.slug}`}>View Details</Link>
+                    <Link href={`/products/${product.slug}`}>View Details</Link>
                   </Button>
                 </CardFooter>
               </Card>

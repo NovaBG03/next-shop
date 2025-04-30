@@ -200,6 +200,34 @@ export const getProduct = async (id: string | ObjectId) => {
   }
 };
 
+export const getProductBySlug = async (slug: string) => {
+  try {
+    const db = getDefaultDb();
+
+    // Lookup product with its categories
+    const product = await collections
+      .products(db)
+      .aggregate([
+        { $match: { slug } },
+        {
+          $lookup: {
+            from: 'categories',
+            localField: 'categoryIds',
+            foreignField: '_id',
+            as: 'categories',
+          },
+        },
+      ])
+      .toArray()
+      .then((products) => products[0] || null);
+
+    return product;
+  } catch (error) {
+    console.error(`Error fetching product with slug ${slug}:`, error);
+    return null;
+  }
+};
+
 export const getProductsPage = async (page = 1, limit = 10) => {
   try {
     const db = getDefaultDb();
